@@ -97,6 +97,8 @@ class Passenger:
                            "\n5) Logout\nSelection Input:")
             if choice.upper() == "1":
                 print("BUY TICKET\n")
+                Tix = Tickets
+                Tix.manage_tickets(Tix, self.P_Username)
                 continue
             if choice.upper() == "2":
                 self.ViewTickets()
@@ -159,7 +161,6 @@ class Passenger:
         print("------------------------------------------------------------------")
         for Lines in Results:
             print(str(Lines[0]).ljust(10), Lines[3].ljust(20), Lines[2].ljust(20), Lines[1].ljust(20))
-
 
     def Edit_Info(self):
         cursor = connection.cursor()
@@ -348,3 +349,33 @@ def Invalid_Input():
         return True
     else:
         return False
+
+
+class Tickets:
+    ticket_number = 100  # don't worry about why it's named this way
+
+    def manage_tickets(self, username):
+        flag = '1'
+        cursor = connection.cursor()
+        if flag == '1':
+            print('Purchase ticket...')
+            # list of valid stations
+            sql = cursor.execute('select Sname from STATION')
+            stations = sql.fetchall()
+            # print(stations)
+            departure = input('Enter your departing station: ')
+            for station in stations:
+                if departure == station[0]:
+                    break
+            arrival = input('Enter your arriving station: ')
+            for station in stations:
+                if arrival == station[0]:
+                    break
+            else:
+                date = input('Enter the date you want to purchase your ticket (YYYY-MM-DD): ')
+                cursor.execute(
+                    'insert into TICKET (Tnumber, PurchDate, ArrivalStation, DepartStation, OwnerUser) values (?, ?, ?, ?, ?)',
+                    (Tickets.ticket_number, date, arrival, departure, username,))
+                connection.commit()
+                Tickets.ticket_number += 1
+            return

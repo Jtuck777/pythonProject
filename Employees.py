@@ -24,11 +24,12 @@ class Driver:
                 print('Edit Schedule PLace Holder\n')
             if choice.upper() == '2':
                 print('View Personal Train Schedule PLace Holder\n')
+                self.ViewDriveSchedule(self.Driv_Username)
             if choice.upper() == '3':
                 return
 
-    def ViewDriveSchedule(self):
-        print("Hello ", self.Driv_Username)
+    def ViewDriveSchedule(self, D_Username):
+        print("Hello ", D_Username)
         print("Please Select Today's Date")
         Driv = connection.cursor()
         Qry = "SELECT DISTINCT TDate FROM TRAIN_SCHEDULE"
@@ -40,18 +41,20 @@ class Driver:
             if i % 2 == 0:
                 print("%1d)" % (i), row[0])
             else:
-                print("%1d)" % (i), row[0].ljust(20))
-        choice = input("\nInput Selection:")
-        choice = int(choice)
-        if choice < 0 or choice > Driv.rowcount:
-            self.Select_Date()
-            return
+                print("%1d)" % (i), row[0].ljust(20), end="")
+        while True:
+            choice = input("\nInput Selection:")
+            choice = int(choice) - 1
+            if choice >= 0 and choice < len(Dates):
+                break
+            else:
+                print("Invalid Input")
         Date_Pick = str(Dates[choice - 1][0])
         Qry = "SELECT * " \
               "FROM (TRAIN_SCHEDULE AS TS LEFT JOIN TRAIN_LINE_INSTANCE AS TLI " \
               "ON TS.TrainNumber = TLI.TrainNumber AND TS.TDate = TLI.TDate) " \
-              "WHERE OperatedBy = ? AND TDate = ?"
-        Driv.execute(Qry, self.Driv_Username, Date_Pick)
+              "WHERE OperatedBy = ? AND TLI.TDate = ?"
+        Driv.execute(Qry, (D_Username, Date_Pick))
         Driv_Sched = Driv.fetchall()
         for lines in Driv_Sched:
             print(lines)
@@ -106,13 +109,16 @@ class Admin:
             if choice.upper() == '2':
                 self.Edit_Employee()
             if choice.upper() == '3':
+                editStation()
                 print('Edit Stations PLace Holder')
             if choice.upper() == '4':
                 print('Edit Schedule PLace Holder')
             if choice.upper() == '5':
+
                 print('Edit Train Line Instance PLace Holder')
             if choice.upper() == '6':
-                print('Edit Employee Info PLace Holder')
+                print('Edit Train Line Place Holder')
+                editTrainLines()
             if choice.upper() == '7':
                 print('Edit Train Types PLace Holder')
             if choice.upper() == '8':
@@ -258,14 +264,14 @@ class Admin:
                 print("1) Driver 2) Controller 3) Admin")
                 j = int(input("Select JobType:"))
                 if j == 1:
-                    user_info[5]=D
+                    user_info[5] = D
                 if j == 2:
-                    user_info[5]=C
+                    user_info[5] = C
                 if j == 3:
-                    user_info[5]=A
+                    user_info[5] = A
             if choice.upper() == '7':
                 print("Delete Employee")
-                Qry ="DELETE FROM EMPLOYEE WHERE Username=?"
+                Qry = "DELETE FROM EMPLOYEE WHERE Username=?"
                 cursor.execute(Qry, (EmpUserName,))
                 connection.commit()
                 return
@@ -273,7 +279,6 @@ class Admin:
                 return
             self.insert_Edited_Emp(user_info, EmpUserName)
             EmpUserName = user_info[0]
-
 
     def insert_Edited_Emp(self, user_info, U_Name):
         cursor = connection.cursor()
@@ -284,7 +289,6 @@ class Admin:
                        )
         connection.commit()
         return
-
 
     def edit_trainLine(self):
         print("Update Train Line Place Holder")
@@ -305,6 +309,58 @@ def Employee_DB_Check(Username):
             return False
     return True
 
+
+def Station_DB_Check(StatName):# Returns False if StatName already in DB
+    cursor = connection.cursor()
+    rows = cursor.execute("SELECT Sname from STATION")
+    for stat in rows:
+        if stat[0] == StatName:
+            print("Station name is already in use")
+            return False
+    return True
+
+def TL_DB_Check(TL_Name):# Returns False if StatName already in DB
+    cursor = connection.cursor()
+    rows = cursor.execute("SELECT Sname from STATION")
+    for stat in rows:
+        if stat[0] == StatName:
+            print("Station name is already in use")
+            return False
+    return True
+def Print_StationInfo(StatName):
+    cursor = connection.cursor()
+    Qry = "SELECT * FROM STATION WHERE Sname =?"
+    cursor.execute(Qry, (StatName,))
+    Results = cursor.fetchall()
+    Qry = "SELECT Distinct LineName FROM STATION natural join Visits WHERE Sname = ?"
+    cursor.execute(Qry, (StatName,))
+    Results2 = cursor.fetchall()
+    print('\nStation Name'.ljust(21), 'Address'.ljust(20), "Visiting Trainlines")
+    print("-----------------------------------------------------------------------------------------")
+    print(Results[0][0].ljust(20), Results[0][1].ljust(20), end="")
+    for result in Results2:
+        print("-",result[0], end=" ")
+    print("\n")
+
+def insert_Station(Stat_info):
+    print(Stat_info)
+    cursor = connection.cursor()
+    cursor.execute("INSERT INTO STATION (Sname, location)"
+                   "VALUES (?,?)",
+                   (Stat_info[0], Stat_info[1])
+                   )
+    connection.commit()
+    return
+
+def Update_Station(Stat_info, StatName):
+    print(Stat_info)
+    cursor = connection.cursor()
+    cursor.execute("UPDATE STATION SET Sname=?, location=? WHERE Sname =?",
+                    (Stat_info[0], Stat_info[1], StatName)
+                   )
+
+    connection.commit()
+    return
 
 def prompt():
     while True:
@@ -347,3 +403,177 @@ def Invalid_Input():
         return True
     else:
         return False
+
+
+def editStation():
+    print("-------Edit Station Info Menu--------")
+    cursor = connection.cursor()
+    Qry = "SELECT * FROM STATION"
+    cursor.execute(Qry)
+    Results = cursor.fetchall()
+    i = 1
+    print('   Station'.ljust(23), 'Location'.ljust(20))
+    print("-----------------------------------------------------------------------------------------")
+
+    for Result in Results:
+        print("%1d)" % (i), Result[0].ljust(20), Result[1].ljust(20))
+        i += 1
+    print("------------------------------------------------------------------------------------------")
+    print("%1d)" % (i), "Create a New Station")
+    print("%1d)" % (i+1), "Exit")
+    print("------------------------------------------------------------------------------------------")
+    while True:
+        choice = int(input("Select Station or Operation number: ")) - 1
+        if choice <= len(Results)+1 and choice >= 0:
+            break
+        else:
+            print(cursor.rowcount)
+            continue
+########################Create NEW STATION###############################
+    if choice >= len(Results):
+        if choice == len(Results)+1:
+            return
+        NewStation = []
+        while True:
+            StatName = input('Enter a New Station Name: ')
+            if len(StatName) >= 4 and len(StatName) <= 15 and Station_DB_Check(StatName):
+                NewStation.append(StatName)
+                break
+            else:
+                print("Invalid Station name, try again")
+                continue
+
+        while True:
+            StatAddr = input('Enter a New Station Address: ')
+            if len(StatAddr) >= 4:
+                break
+            else:
+                print("Invalid Station Addr, try again")
+                continue
+        NewStation.append(StatAddr)
+        Qry = "SELECT DISTINCT LineName FROM TRAIN_LINE"
+        cursor.execute(Qry)
+        Results = cursor.fetchall()
+        for Result in Results:
+            while True:
+                MSG ="Is this station visited by "+ Result[0]+ " (Y/N):"
+                YN = input(MSG)
+                if YN == "y" or YN == "Y":
+                    cursor.execute("INSERT INTO Visits (LineName, Sname) VALUES (?,?)"
+                   , (Result[0], StatName))
+                    break
+                elif YN == 'N' or YN == "n":
+                    break
+                else:
+                    print("Invalid Input please enter Y or N")
+                    continue
+
+        insert_Station(NewStation)
+        return
+    else:
+        Stat_info = []
+        for x in Results[choice]:
+            Stat_info.append(x)
+        StatName = Stat_info[0]
+        while True:
+            Print_StationInfo(StatName)
+            print('1) Edit Station Name'.ljust(25), '2) Edit Address'.ljust(25), '3) Delete Station'.ljust(25))
+            print("4) Exit")
+            choice = input("Input Selection: ")
+            if choice.upper() == '1':
+                while True:
+                    NewStatName = input('Enter a New Station Name: ')
+                    if len(StatName) >= 4 and len(StatName) <= 15 and Station_DB_Check(NewStatName):
+                        Stat_info[0] = NewStatName
+                        break
+                    else:
+                        print("Invalid Station name, try again")
+                        continue
+            if choice.upper() == '2':
+                while True:
+                    StatAddr = input('Enter a New Station Address: ')
+                    if len(StatAddr) >= 4:
+                        break
+                    else:
+                        print("Invalid Station Addr, try again")
+                        continue
+                Stat_info[1] = StatAddr
+            if choice.upper() == '3':
+                print("Delete Station")
+                Qry = "DELETE FROM STATION WHERE Sname=?"
+                cursor.execute(Qry, (StatName,))
+                connection.commit()
+                return
+            if choice.upper() =='4':
+                return
+            Update_Station(Stat_info, StatName)
+            StatName = Stat_info[0]
+
+
+def editTrainLines():
+    print("-------Edit Train Lines Info Menu--------")
+    cursor = connection.cursor()
+    Qry = "SELECT LineName FROM TRAIN_LINE"
+    cursor.execute(Qry)
+    Results = cursor.fetchall()
+    i = 1
+    print('   Train Lines'.ljust(23))
+    for Result in Results:
+
+        if i % 2 == 0:
+            print("%1d)" % (i), Result[0]),
+        else:
+            print("%1d)" % (i), Result[0].ljust(20), end=' ')
+        i += 1
+    print("------------------------------------------------------------------------------------------")
+    print("%1d)" % (i), "Create a New Station")
+    print("%1d)" % (i + 1), "Exit")
+    print("------------------------------------------------------------------------------------------")
+    while True:
+        choice = int(input("Select TrainLine or Operation number: ")) - 1
+        if choice <= len(Results) + 1 and choice >= 0:
+            break
+        else:
+            print("Invalid Input Please try again")
+            continue
+    if choice >= len(Results):
+        if choice == len(Results) + 1:
+            return
+        NewTrainLine = []
+        while True:
+            TL_Name = input('Enter a New Train Line Name: ')
+            if len(TL_Name) >= 4 and len(TL_Name) <= 15 and TL_DB_Check(TL_Name):
+                NewTrainLine.append(TL_Name)
+                break
+            else:
+                print("Invalid Train Line name, try again")
+                continue
+
+        while True:
+            StatAddr = input('Enter a New Station Address: ')
+            if len(StatAddr) >= 4:
+                break
+            else:
+                print("Invalid Station Addr, try again")
+                continue
+        NewTrainLine.append(StatAddr)
+        Qry = "SELECT DISTINCT LineName FROM TRAIN_LINE"
+        cursor.execute(Qry)
+        Results = cursor.fetchall()
+        for Result in Results:
+            while True:
+                MSG = "Is this station visited by " + Result[0] + " (Y/N):"
+                YN = input(MSG)
+                if YN == "y" or YN == "Y":
+                    cursor.execute("INSERT INTO Visits (LineName, Sname) VALUES (?,?)"
+                                   , (Result[0], StatName))
+                    break
+                elif YN == 'N' or YN == "n":
+                    break
+                else:
+                    print("Invalid Input please enter Y or N")
+                    continue
+
+        insert_Station(NewTrainLine)
+        return
+    else:
