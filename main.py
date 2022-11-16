@@ -33,20 +33,20 @@ def main():
             user = DB_User.NewUser()
             user.create_user()
             continue
-        if choice.upper() == '2':
+        elif choice.upper() == '2':
             user = DB_User.Passenger()
             user.Pass_Login()
             user.Pass_Menu()
             continue
-        if choice.upper() == '3':
+        elif choice.upper() == '3':
             user = DB_User.Employee()
             if user.EMP_Login():
                 user.EMPLOYEE_MENU()
             continue
-        if choice.upper() == '4':
-            schedule.train_schedules()
+        elif choice.upper() == '4':
+            schedule.schedule_menu()
             continue
-        if choice.upper() == '5':
+        elif choice.upper() == '5':
             print("Good bye!!")
             break
         else:

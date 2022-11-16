@@ -114,12 +114,12 @@ class Admin:
             if choice.upper() == '4':
                 print('Edit Schedule PLace Holder')
             if choice.upper() == '5':
-
                 print('Edit Train Line Instance PLace Holder')
             if choice.upper() == '6':
                 print('Edit Train Line Place Holder')
                 editTrainLines()
             if choice.upper() == '7':
+                self.edit_train_type()
                 print('Edit Train Types PLace Holder')
             if choice.upper() == '8':
                 print('Exit PLace Holder')
@@ -299,34 +299,248 @@ class Admin:
     def edit_TL_Instance(self):
         print("Update TL Instance placeholder")
 
+    def edit_train_type(self):
+        cursor = connection.cursor()
+        data = cursor.execute('select * from TRAIN_TYPE')
+        train_types = data.fetchall()
+        print('Train Types:')
+        for num, train in enumerate(train_types):
+            print(f'{num + 1}) Train Type: {train[0]}, Train Capacity: {train[1]}')
+        print('-----Edit Train Type Menu------')
+        print('1) Add TrainType\n2) Edit TrainType\n3) Edit Capacity\n4) Exit')
+        while True:
+            choice = int(input('Selection Input: '))
+            if choice == 1:
+                print('Adding Train Type...')
+                type_name = input('Enter the name of the new train type: ')
+                if train_type_check(type_name) and len(type_name) <= 20:
+                    capacity = int(input('Enter the train capacity: '))
+                    cursor.execute('insert into TRAIN_TYPE (TType, capacity) values(?, ?)', (type_name, capacity))
+                    connection.commit()
+                    print('Train type successfully added.')
+                continue
+            elif choice == 2:
+                print('Change Train Type')
+                data = cursor.execute('select * from TRAIN_TYPE')
+                train_types = data.fetchall()
+                print('Train Types:')
+                for num, train in enumerate(train_types):
+                    print(f'{num + 1}) Train Type: {train[0]}, Train Capacity: {train[1]}')
+                old_type = int(input('Select which train type you would like to replace: '))
+                if old_type > 0 and old_type <= len(train_types):
+                    new_type = input('Choose the name of the new train type: ')
+                    if len(new_type) <= 20:
+                        cursor.execute('update TRAIN_TYPE set TType = ? where TType = ?',
+                                       (new_type, train_types[old_type - 1][0]))
+                        connection.commit()
+                        print('Train type updated.')
+                continue
+            elif choice == 3:
+                print('Change Train Capacity')
+                data = cursor.execute('select * from TRAIN_TYPE')
+                train_types = data.fetchall()
+                print('Train Types:')
+                for num, train in enumerate(train_types):
+                    print(f'{num + 1}) Train Type: {train[0]}, Train Capacity: {train[1]}')
+                old_type = int(input('Select which train type you would like to replace: '))
+                if old_type > 0 and old_type <= len(train_types):
+                    new_capacity = int(input('Enter the new train capacity: '))
+                    cursor.execute('update TRAIN_TYPE set capacity = ? where TType = ?',
+                                   (new_capacity, train_types[old_type - 1][0]))
+                    connection.commit()
+                    print('Train capacity updated.')
+                continue
+            elif choice == 4:
+                return
+            else:
+                print('Invalid choice...')
+                continue
 
+    def edit_train_type(self):
+        cursor = connection.cursor()
+        data = cursor.execute('select * from TRAIN_TYPE')
+        train_types = data.fetchall()
+        print('Train Types:')
+        for num, train in enumerate(train_types):
+            print(f'{num + 1}) Train Type: {train[0]}, Train Capacity: {train[1]}')
+
+        while True:
+            print('-----Edit Train Type Menu------')
+            print('1) Add TrainType  2) Edit TrainType\n3) Edit Capacity\n4) Exit')
+            choice = int(input('Selection Input: '))
+            if choice == 1:
+                print('Adding Train Type...')
+                type_name = input('Enter the name of the new train type: ')
+                if train_type_check(type_name) and len(type_name) <= 20:
+                    capacity = int(input('Enter the train capacity: '))
+                    cursor.execute('insert into TRAIN_TYPE (TType, capacity) values(?, ?)', (type_name, capacity))
+                    connection.commit()
+                    print('Train type successfully added.')
+                continue
+            elif choice == 2:
+                print('Change Train Type')
+                data = cursor.execute('select * from TRAIN_TYPE')
+                train_types = data.fetchall()
+                print('Train Types:')
+                for num, train in enumerate(train_types):
+                    print(f'{num + 1}) Train Type: {train[0]}, Train Capacity: {train[1]}')
+                old_type = int(input('Select which train type you would like to replace: '))
+                if old_type > 0 and old_type <= len(train_types):
+                    new_type = input('Choose the name of the new train type: ')
+                    if train_type_check(new_type) and len(new_type) <= 20:
+                        cursor.execute('update TRAIN_TYPE set TType = ? where TType = ?',
+                                       (new_type, train_types[old_type - 1][0]))
+                        connection.commit()
+                        print('Train type updated.')
+                continue
+            elif choice == 3:
+                print('Change Train Capacity')
+                data = cursor.execute('select * from TRAIN_TYPE')
+                train_types = data.fetchall()
+                print('Train Types:')
+                for num, train in enumerate(train_types):
+                    print(f'{num + 1}) Train Type: {train[0]}, Train Capacity: {train[1]}')
+                old_type = int(input('Select which train type you would like to replace: '))
+                if old_type > 0 and old_type <= len(train_types):
+                    new_capacity = int(input('Enter the new train capacity: '))
+                    cursor.execute('update TRAIN_TYPE set capacity = ? where TType = ?',
+                                   (new_capacity, train_types[old_type - 1][0]))
+                    connection.commit()
+                    print('Train capacity updated.')
+                continue
+            elif choice == 4:
+                return
+            else:
+                print('Invalid choice...')
+                continue
 def Employee_DB_Check(Username):
     cursor = connection.cursor()
-    rows = cursor.execute("SELECT Username from EMPLOYEE")
-    for user in rows:
-        if user == Username:
-            print("Username is already in use")
-            return False
-    return True
+    Qry = "SELECT Username from EMPLOYEE WHERE Username=?"
+    cursor.execute(Qry, Username)
+    rows = cursor.fetchall()
+    if len(rows) == 0:
+        return True
+    else:
+        print("Station name is already in use")
+        return False
 
 
-def Station_DB_Check(StatName):# Returns False if StatName already in DB
+def Station_DB_Check(StatName):  # Returns False if StatName already in DB
     cursor = connection.cursor()
-    rows = cursor.execute("SELECT Sname from STATION")
-    for stat in rows:
-        if stat[0] == StatName:
-            print("Station name is already in use")
-            return False
-    return True
+    Qry = "SELECT Sname from STATION WHERE Sname=?"
+    cursor.execute(Qry, (StatName,))
+    rows = cursor.fetchall()
+    if len(rows) == 0:
+        return True
+    else:
+        print("Station name is already in use")
+        return False
 
-def TL_DB_Check(TL_Name):# Returns False if StatName already in DB
+
+def TL_DB_Check(TL_Name):  # Returns False if StatName already in DB
     cursor = connection.cursor()
-    rows = cursor.execute("SELECT Sname from STATION")
-    for stat in rows:
-        if stat[0] == StatName:
-            print("Station name is already in use")
-            return False
-    return True
+    Qry = "SELECT LineName from TRAIN_LINE WHERE LineName=?"
+    cursor.execute(Qry, (TL_Name,))
+    rows = cursor.fetchall()
+    if len(rows) == 0:
+        return True
+    else:
+        print("Line name is already in use")
+        return False
+
+
+def TL_Color_DB_Check(TL_Color):  # Returns False if StatName already in DB
+    cursor = connection.cursor()
+    Qry = "SELECT LineColor from TRAIN_LINE WHERE LineColor=?"
+    cursor.execute(Qry, (TL_Color,))
+    rows = cursor.fetchall()
+    if len(rows) == 0:
+        return True
+    else:
+        print("Line color is already in use")
+        return False
+
+
+def insert_TrainLine(TL_info):
+    print(TL_info)
+    cursor = connection.cursor()
+    cursor.execute("INSERT INTO TRAIN_LINE (LineName , LineColor, TType, StartStation, EndStation)"
+                   "VALUES (?,?,?,?,?)",
+                   (TL_info[0], TL_info[1], TL_info[2], TL_info[3], TL_info[4])
+                   )
+    connection.commit()
+    return
+
+
+def Update_TrainLine(New_TL, TL_Name):
+    print(New_TL)
+    cursor = connection.cursor()
+    cursor.execute("UPDATE TRAIN_LINE SET LineName=?, LineColor=?, TType=?,StartStation=?, EndStation=? "
+                   "WHERE LineName =?",
+                   (New_TL[0], New_TL[1], New_TL[2], New_TL[3], New_TL[4], TL_Name)
+                   )
+    connection.commit()
+    cursor.execute("UPDATE VISITS SET LineName=? "
+                   "WHERE LineName =?",
+                   (New_TL[0], TL_Name)
+                   )
+    connection.commit()
+    return
+
+
+def Print_TrainLineInfo(TL_Name):
+    cursor = connection.cursor()
+    Qry = "SELECT * FROM TRAIN_LINE natural join TRAIN_TYPE WHERE LineName = ?"
+    cursor.execute(Qry, (TL_Name,))
+    Results = cursor.fetchall()
+    Qry = "SELECT Distinct Sname FROM TRAIN_LINE natural join Visits WHERE LineName = ?"
+    cursor.execute(Qry, (TL_Name,))
+    Results2 = cursor.fetchall()
+    print('\nLine Name'.ljust(16), 'Color'.ljust(10), 'Type'.ljust(15),
+          'Start Station'.ljust(20), 'End Station'.ljust(20), "Capacity")
+    print("-----------------------------------------------------------------------------------------")
+    print(Results[0][0].ljust(15), Results[0][1].ljust(10), Results[0][2].ljust(15),
+          Results[0][3].ljust(20), Results[0][4].ljust(20), str(Results[0][5]).ljust(15))
+    print("Stations Visited:")
+    for result in Results2:
+        print("-", result[0], end=" ")
+    print("\n")
+
+
+def PrintAllStations():
+    cursor = connection.cursor()
+    Qry = "SELECT * FROM STATION"
+    cursor.execute(Qry)
+    Results = cursor.fetchall()
+    i = 1
+    print('   Stations'.ljust(23))
+    print("-----------------------------------------------------------------------------------------")
+    for Result in Results:
+        if i % 2 == 0:
+            print("%1d)" % (i), Result[0]),
+        else:
+            print("%1d)" % (i), Result[0].ljust(20), end=' ')
+        i += 1
+    return Results
+
+
+def PrintAll_TrainTypes():
+    cursor = connection.cursor()
+    Qry = "SELECT * FROM TRAIN_TYPE "
+    cursor.execute(Qry)
+    Results = cursor.fetchall()
+    i = 1
+    print('   Types'.ljust(23))
+    print("-----------------------------------------------------------------------------------------")
+    for Result in Results:
+        if i % 2 == 0:
+            print("%1d)" % (i), Result[0]),
+        else:
+            print("%1d)" % (i), Result[0].ljust(20), end=' ')
+        i += 1
+    return Results
+
+
 def Print_StationInfo(StatName):
     cursor = connection.cursor()
     Qry = "SELECT * FROM STATION WHERE Sname =?"
@@ -339,8 +553,9 @@ def Print_StationInfo(StatName):
     print("-----------------------------------------------------------------------------------------")
     print(Results[0][0].ljust(20), Results[0][1].ljust(20), end="")
     for result in Results2:
-        print("-",result[0], end=" ")
+        print("-", result[0], end=" ")
     print("\n")
+
 
 def insert_Station(Stat_info):
     print(Stat_info)
@@ -352,15 +567,17 @@ def insert_Station(Stat_info):
     connection.commit()
     return
 
+
 def Update_Station(Stat_info, StatName):
     print(Stat_info)
     cursor = connection.cursor()
     cursor.execute("UPDATE STATION SET Sname=?, location=? WHERE Sname =?",
-                    (Stat_info[0], Stat_info[1], StatName)
+                   (Stat_info[0], Stat_info[1], StatName)
                    )
 
     connection.commit()
     return
+
 
 def prompt():
     while True:
@@ -420,18 +637,18 @@ def editStation():
         i += 1
     print("------------------------------------------------------------------------------------------")
     print("%1d)" % (i), "Create a New Station")
-    print("%1d)" % (i+1), "Exit")
+    print("%1d)" % (i + 1), "Exit")
     print("------------------------------------------------------------------------------------------")
     while True:
         choice = int(input("Select Station or Operation number: ")) - 1
-        if choice <= len(Results)+1 and choice >= 0:
+        if choice <= len(Results) + 1 and choice >= 0:
             break
         else:
             print(cursor.rowcount)
             continue
-########################Create NEW STATION###############################
+    ########################Create NEW STATION###############################
     if choice >= len(Results):
-        if choice == len(Results)+1:
+        if choice == len(Results) + 1:
             return
         NewStation = []
         while True:
@@ -456,11 +673,11 @@ def editStation():
         Results = cursor.fetchall()
         for Result in Results:
             while True:
-                MSG ="Is this station visited by "+ Result[0]+ " (Y/N):"
+                MSG = "Is this station visited by " + Result[0] + " (Y/N):"
                 YN = input(MSG)
                 if YN == "y" or YN == "Y":
                     cursor.execute("INSERT INTO Visits (LineName, Sname) VALUES (?,?)"
-                   , (Result[0], StatName))
+                                   , (Result[0], StatName))
                     break
                 elif YN == 'N' or YN == "n":
                     break
@@ -504,7 +721,7 @@ def editStation():
                 cursor.execute(Qry, (StatName,))
                 connection.commit()
                 return
-            if choice.upper() =='4':
+            if choice.upper() == '4':
                 return
             Update_Station(Stat_info, StatName)
             StatName = Stat_info[0]
@@ -513,7 +730,7 @@ def editStation():
 def editTrainLines():
     print("-------Edit Train Lines Info Menu--------")
     cursor = connection.cursor()
-    Qry = "SELECT LineName FROM TRAIN_LINE"
+    Qry = "SELECT * FROM TRAIN_LINE"
     cursor.execute(Qry)
     Results = cursor.fetchall()
     i = 1
@@ -525,8 +742,8 @@ def editTrainLines():
         else:
             print("%1d)" % (i), Result[0].ljust(20), end=' ')
         i += 1
-    print("------------------------------------------------------------------------------------------")
-    print("%1d)" % (i), "Create a New Station")
+    print("\n------------------------------------------------------------------------------------------")
+    print("%1d)" % (i), "Create a New Train Line")
     print("%1d)" % (i + 1), "Exit")
     print("------------------------------------------------------------------------------------------")
     while True:
@@ -550,23 +767,46 @@ def editTrainLines():
                 continue
 
         while True:
-            StatAddr = input('Enter a New Station Address: ')
-            if len(StatAddr) >= 4:
+            TL_Color = input('Enter Trainline color: ')
+            if len(TL_Color) >= 1 and TL_Color_DB_Check(TL_Color):
                 break
             else:
-                print("Invalid Station Addr, try again")
+                print("Invalid Color, try again")
                 continue
-        NewTrainLine.append(StatAddr)
-        Qry = "SELECT DISTINCT LineName FROM TRAIN_LINE"
+        NewTrainLine.append(TL_Color)
+
+        T_List = PrintAll_TrainTypes()
+        while True:
+            T_Sel = int(input("Enter the Type Number you wish to select: ")) - 1
+            if 0 <= T_Sel < len(T_List):
+                NewTrainLine.append(T_List[T_Sel][0])
+                break
+            else:
+                print("Invalid Input Try again")
+        Results = PrintAllStations()
+        while True:
+            S_Station = int(input("\nSelect Starting Station Number: ")) - 1
+            E_Station = int(input("Select Ending Station Number: ")) - 1
+            if S_Station >= len(Results) or E_Station >= len(Results):
+                print("Invalid Input Try Again")
+                continue
+            if S_Station < 0 or E_Station < 0 or S_Station == E_Station:
+                print("Invalid Input Try Again")
+                continue
+            NewTrainLine.append(Results[S_Station][0])
+            NewTrainLine.append(Results[E_Station][0])
+            break
+
+        Qry = "SELECT DISTINCT Sname FROM Station"
         cursor.execute(Qry)
         Results = cursor.fetchall()
         for Result in Results:
             while True:
-                MSG = "Is this station visited by " + Result[0] + " (Y/N):"
+                MSG = "Does this Train Line visit " + Result[0] + " Station: (Y/N):"
                 YN = input(MSG)
                 if YN == "y" or YN == "Y":
                     cursor.execute("INSERT INTO Visits (LineName, Sname) VALUES (?,?)"
-                                   , (Result[0], StatName))
+                                   , (NewTrainLine[0], Result[0]))
                     break
                 elif YN == 'N' or YN == "n":
                     break
@@ -574,6 +814,134 @@ def editTrainLines():
                     print("Invalid Input please enter Y or N")
                     continue
 
-        insert_Station(NewTrainLine)
+        insert_TrainLine(NewTrainLine)
         return
+    Updated_TL = []
+    for x in Results[choice]:
+        print(x)
+        Updated_TL.append(x)
+    TL_Name = Updated_TL[0]
+    while True:
+        Print_TrainLineInfo(TL_Name)
+        print('1) Edit Line Name'.ljust(25), '2) Edit Color'.ljust(25), '3) Edit Type '.ljust(25))
+        print('4) Change Start Station'.ljust(25), '5) Change End Station'.ljust(25), "6) Delete Train Line")
+        print('7) Add Station'.ljust(25), '8) Remove Station'.ljust(25), "7) Exit")
+        choice = input("Input Selection: ")
+        if choice.upper() == '1':
+            while True:
+                New_TL_Name = input('Enter a New Train Line Name: ')
+                if len(TL_Name) >= 4 and len(TL_Name) <= 15 and TL_DB_Check(New_TL_Name):
+                    Updated_TL[0] = New_TL_Name
+                    break
+                else:
+                    print("Invalid Train Line name, try again")
+                    continue
+
+        if choice.upper() == '2':
+            while True:
+                TL_Color = input('Enter New Trainline color: ')
+                if len(TL_Color) >= 1 and TL_Color_DB_Check(TL_Color):
+                    break
+                else:
+                    print("Invalid Color, try again")
+                    continue
+            Updated_TL[1] = TL_Color
+
+        if choice.upper() == '3':
+            T_List = PrintAll_TrainTypes()
+            while True:
+                T_Sel = int(input("Enter the Type Number you wish to select: ")) - 1
+                if 0 <= T_Sel < len(T_List):
+                    Updated_TL[2] = T_List[T_Sel][0]
+                    break
+                else:
+                    print("Invalid Input Try again")
+        if choice.upper() == '4':
+            S_List = PrintAllStations()
+            while True:
+                S_Station = int(input("\nSelect Starting Station Number: ")) - 1
+                if S_Station >= len(S_List):
+                    print("Invalid Input Try Again")
+                    continue
+                if S_Station < 0 or S_List[S_Station][0] == Updated_TL[4]:
+                    print("Invalid Input Try Again")
+                    continue
+                else:
+                    Updated_TL[3] = S_List[S_Station][0]
+                break
+        if choice.upper() == '5':
+            E_List = PrintAllStations()
+            while True:
+                E_Station = int(input("\nSelect Starting Station Number: ")) - 1
+                if E_Station >= len(E_List):
+                    print("Invalid Input Try Again")
+                    continue
+                if E_Station < 0 or E_List[E_Station][0] == Updated_TL[4]:
+                    print("Invalid Input Try Again")
+                    continue
+                else:
+                    Updated_TL[4] = E_List[E_Station][0]
+                break
+        if choice.upper() == '6':
+            print("Delete Station")
+            Qry = "DELETE FROM TRAIN_LINE WHERE LineName=?"
+            cursor.execute(Qry, (TL_Name,))
+            connection.commit()
+            return
+        if choice.upper()=='7':
+            Results = PrintAllStations()
+            while True:
+                S_Sel = int(input("\nEnter Station Number to Add to Train Line: ")) - 1
+                if 0 < S_Sel <= len(Results):
+                    Qry = "SELECT Sname FROM Visits WHERE LineName = ? and Sname = ?"
+                    cursor.execute(Qry, (TL_Name, Results[S_Sel][0],))
+                    Results2 = cursor.fetchall()
+                    if len(Results2) == 0:
+                        Qry = "INSERT INTO Visits (LineName, Sname) VALUES (?,?) "
+                        cursor.execute(Qry, (TL_Name, Results[S_Sel][0]))
+                        connection.commit()
+                        break
+                    else:
+                        print("Station is already visited by Train Line ")
+                        return
+        if choice.upper() == '8':
+            Qry = "SELECT Distinct Sname FROM TRAIN_LINE natural join Visits WHERE LineName = ?"
+            cursor.execute(Qry, (TL_Name,))
+            Results = cursor.fetchall()
+            i = 1
+            for Result in Results:
+                if i % 2 == 0:
+                    print("%1d)" % (i), Result[0]),
+                else:
+                    print("%1d)" % (i), Result[0].ljust(20), end=' ')
+                i += 1
+            while True:
+                S_Sel = int(input("\nEnter Station Number to Remove from Train Line: "))-1
+                if 0 <= S_Sel < len(Results) and Results[S_Sel][0] != Updated_TL[3] and Results[S_Sel][0] != Updated_TL[4]:
+                    break
+                else:
+                    print("Invalid Input Please try again")
+                    if Results[S_Sel][0] != Updated_TL[4]:
+                        print("Can't Delete End Station")
+                    if Results[S_Sel][0] != Updated_TL[3]:
+                        print("Can't Delete Start Station")
+                    if Invalid_Input() is False:
+                        return
+            Qry = "DELETE FROM VISITS WHERE LineName=? and SName=?"
+            cursor.execute(Qry, (TL_Name, Results[S_Sel][0],))
+            connection.commit()
+
+        Update_TrainLine(Updated_TL, TL_Name)
+        return
+
+def train_type_check(type):
+
+    cursor = connection.cursor()
+    Qry = "SELECT TType from TRAIN_TYPE WHERE TType=?"
+    cursor.execute(Qry, (type,))
+    rows = cursor.fetchall()
+    if len(rows) == 0:
+        return True
     else:
+        print("Line name is already in use")
+        return False

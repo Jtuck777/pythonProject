@@ -98,7 +98,7 @@ class Passenger:
             if choice.upper() == "1":
                 print("BUY TICKET\n")
                 Tix = Tickets
-                Tix.manage_tickets(Tix, self.P_Username)
+                Tickets.manage_tickets(self, choice, self.P_Username)
                 continue
             if choice.upper() == "2":
                 self.ViewTickets()
@@ -352,30 +352,45 @@ def Invalid_Input():
 
 
 class Tickets:
-    ticket_number = 100  # don't worry about why it's named this way
-
-    def manage_tickets(self, username):
-        flag = '1'
+    def manage_tickets(self, flag, username):
+        # print(flag)
         cursor = connection.cursor()
         if flag == '1':
             print('Purchase ticket...')
             # list of valid stations
+            ticket_number = 0
             sql = cursor.execute('select Sname from STATION')
             stations = sql.fetchall()
             # print(stations)
-            departure = input('Enter your departing station: ')
+            i = 1
             for station in stations:
-                if departure == station[0]:
-                    break
-            arrival = input('Enter your arriving station: ')
-            for station in stations:
-                if arrival == station[0]:
-                    break
+                if i % 2 == 0:
+                    print("%1d)" % (i), station[0]),
+                else:
+                    print("%1d)" % (i), station[0].ljust(20), end=' ')
+                i += 1
+
+            departure = int(input('\nEnter your departing station number: '))
+            arrival = int(input('Enter your arriving station number: '))
+            date = input('Enter the date you want to purchase your ticket (YYYY-MM-DD): ')
+            if len(date) == 10 and (date[0:3].isnumeric() and date[5:6].isnumeric() and date[8:9].isnumeric() and date[4] == '-' and date[7] == '-'):
+                data = cursor.execute('select max(Tnumber) from TICKET')
+                ticket_number = data.fetchone()[0]
+                ticket_number += 1
+                print(ticket_number)
+            cursor.execute('insert into TICKET (Tnumber, PurchDate, ArrivalStation, DepartStation, OwnerUser) values (?, ?, ?, ?, ?)', (ticket_number, date, stations[arrival][0], stations[departure][0], username,))
+            connection.commit()
+            print('Ticket successfully purchased! View any time in the tickets menu.')
+        elif flag == '2':
+            print('View ticket...')
+            print('Ticket appears as (Tnumber, PurchaseDate, DepartStation, ArrivalStation).')
+            query = 'select Tnumber, PurchDate, DepartStation, ArrivalStation from TICKET where OwnerUser = ?'
+            sql = cursor.execute(query, (username,))
+            data = sql.fetchall()
+            if len(data) < 1:
+                print('You don\'t have any tickets!')
             else:
-                date = input('Enter the date you want to purchase your ticket (YYYY-MM-DD): ')
-                cursor.execute(
-                    'insert into TICKET (Tnumber, PurchDate, ArrivalStation, DepartStation, OwnerUser) values (?, ?, ?, ?, ?)',
-                    (Tickets.ticket_number, date, arrival, departure, username,))
-                connection.commit()
-                Tickets.ticket_number += 1
+                for row in data:
+                    print(row)
+        else:
             return
