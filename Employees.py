@@ -114,6 +114,7 @@ class Admin:
             if choice.upper() == '4':
                 print('Edit Schedule PLace Holder')
             if choice.upper() == '5':
+                Edit_TL_Instance()
                 print('Edit Train Line Instance PLace Holder')
             if choice.upper() == '6':
                 print('Edit Train Line Place Holder')
@@ -290,14 +291,8 @@ class Admin:
         connection.commit()
         return
 
-    def edit_trainLine(self):
-        print("Update Train Line Place Holder")
-
     def edit_schedule(self):
         print("UPdate schdule place holder")
-
-    def edit_TL_Instance(self):
-        print("Update TL Instance placeholder")
 
     def edit_train_type(self):
         cursor = connection.cursor()
@@ -413,6 +408,8 @@ class Admin:
             else:
                 print('Invalid choice...')
                 continue
+
+
 def Employee_DB_Check(Username):
     cursor = connection.cursor()
     Qry = "SELECT Username from EMPLOYEE WHERE Username=?"
@@ -446,6 +443,18 @@ def TL_DB_Check(TL_Name):  # Returns False if StatName already in DB
         return True
     else:
         print("Line name is already in use")
+        return False
+
+
+def TLI_DB_Check(TLI_Num, TLI_Date):  # Returns False if StatName already in DB
+    cursor = connection.cursor()
+    Qry = "SELECT * from TRAIN_LINE_INSTANCE WHERE TrainNumber=? and TDate=?"
+    cursor.execute(Qry, (TLI_Num, TLI_Date))
+    rows = cursor.fetchall()
+    if len(rows) == 0:
+        return True
+    else:
+        print("Line Instance already Exists")
         return False
 
 
@@ -616,7 +625,7 @@ def GetDate():
 
 def Invalid_Input():
     choice = input("Press 1 to try again or 2 to return to main menu\n")
-    if choice.upper == '1':
+    if choice == '1':
         return True
     else:
         return False
@@ -888,7 +897,7 @@ def editTrainLines():
             cursor.execute(Qry, (TL_Name,))
             connection.commit()
             return
-        if choice.upper()=='7':
+        if choice.upper() == '7':
             Results = PrintAllStations()
             while True:
                 S_Sel = int(input("\nEnter Station Number to Add to Train Line: ")) - 1
@@ -916,8 +925,9 @@ def editTrainLines():
                     print("%1d)" % (i), Result[0].ljust(20), end=' ')
                 i += 1
             while True:
-                S_Sel = int(input("\nEnter Station Number to Remove from Train Line: "))-1
-                if 0 <= S_Sel < len(Results) and Results[S_Sel][0] != Updated_TL[3] and Results[S_Sel][0] != Updated_TL[4]:
+                S_Sel = int(input("\nEnter Station Number to Remove from Train Line: ")) - 1
+                if 0 <= S_Sel < len(Results) and Results[S_Sel][0] != Updated_TL[3] and Results[S_Sel][0] != Updated_TL[
+                    4]:
                     break
                 else:
                     print("Invalid Input Please try again")
@@ -934,8 +944,8 @@ def editTrainLines():
         Update_TrainLine(Updated_TL, TL_Name)
         return
 
-def train_type_check(type):
 
+def train_type_check(type):
     cursor = connection.cursor()
     Qry = "SELECT TType from TRAIN_TYPE WHERE TType=?"
     cursor.execute(Qry, (type,))
@@ -945,3 +955,218 @@ def train_type_check(type):
     else:
         print("Line name is already in use")
         return False
+
+
+def Sel_TrainLine():
+    cursor = connection.cursor()
+    Qry = "SELECT Distinct LineName from TRAIN_LINE"
+    cursor.execute(Qry)
+    Results = cursor.fetchall()
+    i = 1
+    print("   Train Lines")
+    print("-----------------------------------------------------------------------------------------")
+    for Result in Results:
+        if i % 2 == 0:
+            print("%1d)" % (i), Result[0]),
+        else:
+            print("%1d)" % (i), str(Result[0]).ljust(20), end=' ')
+        i += 1
+    if i % 2 == 0:
+        print("\n")
+    msg = "Select Train Line to add: "
+    while True:
+        Sel = int(input(msg))
+        if 0 <= Sel - 1 < len(Results):
+            break
+        else:
+            print("Invalid Input")
+    return Results[Sel - 1][0]
+
+
+def Sel_Driver():
+    cursor = connection.cursor()
+    Qry = "SELECT Distinct Username FROM EMPLOYEE WHERE JobType='Driver'"
+    cursor.execute(Qry)
+    Results = cursor.fetchall()
+    i = 1
+    print("   Train Drivers")
+    print("-----------------------------------------------------------------------------------------")
+    for Result in Results:
+        if i % 2 == 0:
+            print("%1d)" % (i), Result[0]),
+        else:
+            print("%1d)" % (i), str(Result[0]).ljust(20), end=' ')
+        i += 1
+    if i % 2 == 0:
+        print("\n")
+    msg = "Select Train Driver to add: "
+    while True:
+        Sel = int(input(msg))
+        if 0 <= Sel - 1 < len(Results):
+            break
+        else:
+            print("Invalid Input")
+    return Results[Sel - 1][0]
+
+
+def insert_TLI(TLI_info):
+    print(TLI_info)
+    cursor = connection.cursor()
+    cursor.execute("INSERT INTO TRAIN_LINE_INSTANCE (TrainNumber, TDate, LineName, OperatedBy)"
+                   "VALUES (?,?,?,?)",
+                   (TLI_info[0], TLI_info[1], TLI_info[2], TLI_info[3])
+                   )
+    connection.commit()
+    return
+
+
+def Update_TLI(New_TLI, TLI):
+    cursor = connection.cursor()
+    cursor.execute("UPDATE TRAIN_LINE_INSTANCE SET TrainNumber=?, TDate=?, LineName=?,OperatedBy=?"
+                   "WHERE TrainNumber =? and TDate =?",
+                   (New_TLI[0], New_TLI[1], New_TLI[2], New_TLI[3], TLI[0], TLI[1])
+                   )
+    connection.commit()
+    print("Train # |    Date     |  Train Line  | Operator")
+    print("------------------------------------------------------")
+    print(str(New_TLI[0]).rjust(8), str(New_TLI[1]).center(13), New_TLI[2].center(14), New_TLI[3])
+    print("------------------------------------------------------")
+    return
+
+def Del_TLI(TLI):
+    cursor = connection.cursor()
+    Qry = "DELETE FROM TRAIN_LINE_INSTANCE WHERE TrainNumber=? and TDate=?"
+    cursor.execute(Qry, (str(TLI[0]), TLI[1]))
+    connection.commit()
+    print("Delete TLI from Schedule Placeholder ")
+def Edit_TL_Instance():
+    while True:
+        print("-----Edit Train Line Instance Menu-----")
+        print("View by:")
+        print("1) Train Number 2) Date 3) LineName 4) Operator")
+        print("5) Create New Train Line Instance")
+        print("6) Exit")
+        Opt = int(input("Input Selection: "))
+        if Opt < 1 or Opt > 6:
+            if Invalid_Input():
+                continue
+            else:
+                return
+        if Opt == 6:
+            return
+        if Opt == 5:
+            NewTLI = []
+            T_Num = int(input("Enter Train Number : "))
+            NewTLI.append(T_Num)
+            NewTLI.append(GetDate())
+            if TLI_DB_Check(NewTLI[0], NewTLI[1]) is False:
+                if Invalid_Input():
+                    continue
+                else:
+                    return
+            NewTLI.append(Sel_TrainLine())
+            NewTLI.append(Sel_Driver())
+            insert_TLI(NewTLI)
+            continue
+        TLI = Print_TLI_Info(Opt)
+        print("Train # |    Date     |  Train Line  | Operator")
+        print("------------------------------------------------------")
+        print(str(TLI[0]).rjust(8), str(TLI[1]).center(13), TLI[2].center(14), TLI[3])
+        print("------------------------------------------------------")
+        print("1) Edit Train Number     2) Edit Date ")
+        print("3) Edit LineName         4) Change Operator")
+        print("5) Delete Train Line Instance \n6) Exit")
+        while True:
+            Opt = int(input("Input Selection: "))
+            if 0 < Opt < 7:
+                break
+            else:
+                print("Invalid Input")
+                continue
+        if Opt == 6:
+            return
+        Updated_TLI = []
+        for x in TLI:
+            Updated_TLI.append(x)
+        if Opt == 1:
+            print(TLI)
+            T_Num = int(input("Enter Train Number : "))
+            if TLI_DB_Check(T_Num, TLI[1]) is False:
+                if Invalid_Input():
+                    continue
+                else:
+                    return
+            Updated_TLI[0] = T_Num
+        if Opt == 2:
+            T_Date = GetDate()
+            if TLI_DB_Check(TLI[0], T_Date) is False:
+                if Invalid_Input():
+                    continue
+                else:
+                    return
+            Updated_TLI[1] = T_Date
+        if Opt == 3:
+            Updated_TLI[2] = Sel_TrainLine()
+        if Opt == 4:
+            Updated_TLI[3] = Sel_Driver()
+        if Opt == 5:
+            Del_TLI(TLI)
+            continue
+        Update_TLI(Updated_TLI, TLI)
+
+
+def Print_TLI_Info(Opt):
+    cursor = connection.cursor()
+    if Opt == 1:
+        Col = "TrainNumber"
+    if Opt == 2:
+        Col = "TDate"
+    if Opt == 3:
+        Col = "LineName"
+    if Opt == 4:
+        Col = "OperatedBy"
+
+    Qry = "SELECT Distinct " + Col + " from TRAIN_LINE_INSTANCE"
+    cursor.execute(Qry)
+    Results = cursor.fetchall()
+    i = 1
+    print("   Train Line Instance " + Col + "'s".ljust(23))
+    print("-----------------------------------------------------------------------------------------")
+    for Result in Results:
+        if i % 2 == 0:
+            print("%1d)".ljust(4) % i, Result[0]),
+        else:
+            print("%1d)".ljust(4) % i, str(Result[0]).ljust(20), end='')
+        i += 1
+    if i % 2 == 0:
+        print("\n")
+    msg = "Enter the " + Col + " number you would like to see: "
+    while True:
+        Sel = int(input(msg))
+        if 0 <= Sel - 1 < len(Results):
+            break
+        else:
+            print("Invalid Input, Try Again")
+
+    Qry = "SELECT * from TRAIN_LINE_INSTANCE WHERE " + Col + "=?"
+    Attr = str(Results[Sel - 1][0])
+    cursor.execute(Qry, (Results[Sel - 1][0],))
+    Results = cursor.fetchall()
+    i = 1
+    print("   Train Line Instances for: " + Attr)
+    print("   Train # |    Date     |  Train Line  | Operator")
+    print("------------------------------------------------------")
+    for result in Results:
+        print("%1d)".ljust(3) % (i), str(result[0]).rjust(7), str(result[1]).center(13), result[2].center(14), result[3] )
+        i += 1
+    while True:
+        SEL = int(input("Select Instance to Edit: "))
+        if 0 <= SEL - 1 < len(Results):
+            break
+        else:
+            print("Invalid Input, Try again")
+
+    TLI = []
+    for x in Results[SEL - 1]:
+        TLI.append(x)
+    return TLI
