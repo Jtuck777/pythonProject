@@ -75,9 +75,9 @@ class Controller:
             if choice.upper() == '1':
                 print('Edit Schedule PLace Holder\n')
             if choice.upper() == '2':
-                print('Edit Train Line Instance PLace Holder\n')
+                Edit_TL_Instance()
             if choice.upper() == '3':
-                print('Edit Train Line PLace Holder\n')
+                editTrainLines()
             if choice.upper() == '4':
                 return
 
@@ -87,8 +87,7 @@ class Controller:
     def C_edit_schedule(self):
         print("UPdate schdule place holder")
 
-    def C_edit_TL_Instance(self):
-        print("Update TL Instance placeholder")
+
 
 
 class Admin:
